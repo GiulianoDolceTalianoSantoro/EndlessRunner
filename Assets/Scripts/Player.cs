@@ -3,8 +3,18 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public float speed;
+    Rigidbody rb;
+
+    /// <summary>
+    /// Speed values
+    /// </summary>
+    float currentSpeed = 20f;
+    float minSpeed;
+    float maxSpeed = 60f;
+    public float accelerationTime = 70f;
+    float time;
     public float sideSpeed;
+
     public GameObject leftText;
     public GameObject rightText;
 
@@ -13,11 +23,14 @@ public class Player : MonoBehaviour
     [SerializeField]
     PlayerPosition currentPosition;
 
-    float fraction = 0;
-
     // Start is called before the first frame update
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
+
+        time = 0;
+        minSpeed = currentSpeed;
+
         float leftPositionX = -5f;
         float middlePositionX = 0f;
         float rightPositionX = 5f;
@@ -30,8 +43,7 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z + speed * Time.deltaTime);
-
+        IncreasePlayerSpeed();
         InputManager();
     }
 
@@ -116,6 +128,25 @@ public class Player : MonoBehaviour
         }
 
         transform.DOMoveX(positions[(int)currentPosition], sideSpeed * Time.deltaTime);
+        // We should add force instead of using DOTween until the position we need is reached
+    }
+
+    void IncreasePlayerSpeed()
+    {
+        currentSpeed = Mathf.SmoothStep(minSpeed, maxSpeed, time / accelerationTime);
+        transform.position += transform.forward * currentSpeed * Time.deltaTime;
+        time += Time.deltaTime;
+
+        Debug.Log(currentSpeed);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!collision.gameObject.CompareTag("Plataform"))
+        {
+            rb.velocity = Vector3.zero;
+            currentSpeed = 0;
+        }
     }
 }
 

@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-
     public static GameManager _instance;
     public static GameManager Instance
     {
@@ -25,13 +24,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public Plataform plataform;
+    Player player;
+    float time;
+
+    public Plataform[] plataforms;
 
     int instantiateTime;
 
     // Start is called before the first frame update
     void Start()
     {
+        player = FindObjectOfType<Player>();
         instantiateTime = 0;
         InstantiatePlataforms();
     }
@@ -39,11 +42,13 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
     }
 
     public void InstantiatePlataforms() 
     {
+        var plataformIndex = Random.Range(0, plataforms.Length);
+        Plataform plataform = plataforms[plataformIndex];
+
         if (instantiateTime == 0)
         {
             Plataform firstPlataform = Instantiate(plataform, new Vector3(0f, 0f, 0f), Quaternion.identity);

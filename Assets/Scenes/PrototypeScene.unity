@@ -405,8 +405,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e50cd92c76ec4f548ada5785a84adac4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  plataform: {fileID: 5210994220758980864, guid: 5075ead36645b024a9157db56ca2deed,
-    type: 3}
+  plataforms:
+  - {fileID: 5210994220758980864, guid: 5075ead36645b024a9157db56ca2deed, type: 3}
+  - {fileID: 5210994220758980864, guid: 30803e00b81cdc743aa7fc774f2f4181, type: 3}
+  - {fileID: 5210994220758980864, guid: 6819a44212b88bb4184e3d66565d12ff, type: 3}
+  - {fileID: 5210994220758980864, guid: 12a9a2a1ec6e717429dafdfd6a2794a4, type: 3}
 --- !u!4 &651808008
 Transform:
   m_ObjectHideFlags: 0
@@ -686,7 +689,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14531eb6b4706a742afaf3f46287fc00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  accelerationTime: 60
   sideSpeed: 5
   leftText: {fileID: 641985121}
   rightText: {fileID: 1865432750}
