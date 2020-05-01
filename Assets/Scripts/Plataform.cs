@@ -4,10 +4,14 @@ using UnityEngine;
 
 public class Plataform : MonoBehaviour
 {
+    Instantiator instantiator;
+
     public Vector3 initialPosition;
     // Start is called before the first frame update
     void Start()
     {
+        instantiator = FindObjectOfType<Instantiator>();
+
         initialPosition = transform.position;
     }
 
@@ -20,7 +24,7 @@ public class Plataform : MonoBehaviour
     private void OnBecameInvisible() 
     {
         Destroy(gameObject);
-        GameManager.Instance.InstantiatePlataforms();
+        instantiator.InstantiatePlataforms();
     }
 
     private void OnBecameVisible() 

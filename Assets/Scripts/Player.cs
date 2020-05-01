@@ -1,8 +1,11 @@
 ﻿using DG.Tweening;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
+    GameManager gameManager;
+
     Rigidbody rb;
 
     /// <summary>
@@ -11,22 +14,35 @@ public class Player : MonoBehaviour
     float currentSpeed = 20f;
     float minSpeed;
     float maxSpeed = 60f;
-    public float accelerationTime = 70f;
+    public float accelerationTime = 80f;
     float time;
-    public float sideSpeed;
+    [Range(5f, 10f)]
+    public float sideSpeed = 5f;
 
-    public GameObject leftText;
-    public GameObject rightText;
+    /// <summary>
+    /// Jump values
+    /// </summary>
+    public LayerMask floorLayer;
+    SphereCollider coll;
+    public float jumpForce;
+    public float fallMultiplier;
 
     float[] positions;
 
     [SerializeField]
     PlayerPosition currentPosition;
 
+    private Touch touch;
+    private Vector3 beginTouchPosition;
+    private Vector3 endTouchPosition;
+
     // Start is called before the first frame update
     void Start()
     {
+        gameManager = FindObjectOfType<GameManager>();
+
         rb = GetComponent<Rigidbody>();
+        coll = GetComponent<SphereCollider>();
 
         time = 0;
         minSpeed = currentSpeed;
@@ -45,46 +61,8 @@ public class Player : MonoBehaviour
     {
         IncreasePlayerSpeed();
         InputManager();
-    }
 
-    void InputManager()
-    {
-        if(Input.GetKeyDown(KeyCode.A) || (Input.GetMouseButtonDown(0) && GetMouseButtonDownPosition() == ScreenPosition.Left))
-        {
-            leftText.SetActive(true);
-            MoveToExactPosition(ScreenPosition.Left);
-        }
-        else if (Input.GetKeyDown(KeyCode.D) || (Input.GetMouseButtonDown(0) && GetMouseButtonDownPosition() == ScreenPosition.Right))
-        {
-            rightText.SetActive(true);
-            MoveToExactPosition(ScreenPosition.Right);
-        }
-
-        if (Input.GetKeyUp(KeyCode.A) || Input.GetMouseButtonUp(0))
-        {
-            leftText.SetActive(false);
-        }
-
-        if (Input.GetKeyUp(KeyCode.D) || Input.GetMouseButtonUp(0))
-        {
-            rightText.SetActive(false);
-        }
-    }
-
-    ScreenPosition GetMouseButtonDownPosition()
-    {
-        ScreenPosition screenPosition;
-
-        if(Input.mousePosition.x > Screen.width / 2)
-        {
-            screenPosition = ScreenPosition.Right;
-        }
-        else
-        {
-            screenPosition = ScreenPosition.Left;
-        }
-
-        return screenPosition;
+        InputManagerForTesting();
     }
 
     void SetInitialPosition()
@@ -92,6 +70,80 @@ public class Player : MonoBehaviour
         currentPosition = PlayerPosition.Middle;
 
         transform.position = new Vector3(positions[(int)currentPosition], transform.position.y, transform.position.z);
+    }
+
+    void InputManager()
+    {
+        if (Input.touchCount > 0)
+        {
+            touch = Input.GetTouch(0);
+
+            switch (touch.phase)
+            {
+                case TouchPhase.Began:
+                    beginTouchPosition = touch.position;
+                    break;
+                case TouchPhase.Ended:
+                    endTouchPosition = touch.position;
+
+                    if (beginTouchPosition == endTouchPosition)
+                    {
+                        return;
+                    }
+
+                    if (beginTouchPosition.x - 100f > endTouchPosition.x)
+                    {
+                        MoveToExactPosition(ScreenPosition.Left);
+                    }
+                    else if (beginTouchPosition.x + 100f < endTouchPosition.x)
+                    {
+                        MoveToExactPosition(ScreenPosition.Right);
+                    }
+                    else if (beginTouchPosition.y < endTouchPosition.y)
+                    {
+                        Jump();
+                    }
+
+                    break;
+            }
+        }
+
+        GravityBalance();
+    }
+
+    void InputManagerForTesting()
+    {
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            Jump();
+        }
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            MoveToExactPosition(ScreenPosition.Left);
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            MoveToExactPosition(ScreenPosition.Right);
+        }
+    }
+
+    void Jump()
+    {
+        Vector3 vector = new Vector3(coll.bounds.center.x, coll.bounds.min.y, coll.bounds.center.z);
+        var isOnFloor = Physics.CheckCapsule(coll.bounds.center, vector, coll.radius, floorLayer);
+
+        if (isOnFloor)
+        {
+            rb.velocity += Vector3.up * jumpForce;
+        }
+    }
+
+    void GravityBalance()
+    {
+        if (rb.velocity.y < 0)
+        {
+            rb.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+        }
     }
 
     void MoveToExactPosition(ScreenPosition screenPosition)
@@ -136,8 +188,6 @@ public class Player : MonoBehaviour
         currentSpeed = Mathf.SmoothStep(minSpeed, maxSpeed, time / accelerationTime);
         transform.position += transform.forward * currentSpeed * Time.deltaTime;
         time += Time.deltaTime;
-
-        Debug.Log(currentSpeed);
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -146,6 +196,21 @@ public class Player : MonoBehaviour
         {
             rb.velocity = Vector3.zero;
             currentSpeed = 0;
+        }
+
+        if (collision.gameObject.CompareTag("Obstacle"))
+        {
+            foreach (ContactPoint contact in collision.contacts)
+            {
+                if (contact.normal.y > 0)
+                {
+                    return;
+                }
+                else
+                {
+                    gameManager.RestartLevel();
+                }
+            }
         }
     }
 }
