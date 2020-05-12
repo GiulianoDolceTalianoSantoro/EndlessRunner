@@ -1,40 +1,66 @@
-﻿using DG.Tweening;
+﻿using System;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
+    #region Private Fields
     GameManager gameManager;
 
     Rigidbody rb;
 
-    /// <summary>
-    /// Speed values
-    /// </summary>
-    float currentSpeed = 20f;
-    float minSpeed;
-    float maxSpeed = 60f;
-    public float accelerationTime = 80f;
-    float time;
-    [Range(5f, 10f)]
-    public float sideSpeed = 5f;
-
-    /// <summary>
-    /// Jump values
-    /// </summary>
-    public LayerMask floorLayer;
-    SphereCollider coll;
-    public float jumpForce;
-    public float fallMultiplier;
-
     float[] positions;
-
-    [SerializeField]
     PlayerPosition currentPosition;
 
-    private Touch touch;
-    private Vector3 beginTouchPosition;
-    private Vector3 endTouchPosition;
+    float currentSpeed = 20f;
+    float minSpeed;
+
+    float currentSideSpeed = 1f;
+    float minSideSpeed;
+
+    float time;
+
+    SphereCollider coll;
+    #endregion
+
+    #region Public Fields
+    [Header("Speed values")]
+    [Tooltip("Player's maximum speed")]
+    public float maxSpeed = 60f;
+    [Tooltip("Player's maximum side movement speed")]
+    public float maxSideSpeed = 15f;
+    [Tooltip("Player's acceleration per time")]
+    public float accelerationTime = 80f;
+    
+
+    [Header("Jump values")]
+    [Tooltip("The layer of GameObjects where the Player will be able to jump over")]
+    public LayerMask floorLayer;
+    [Tooltip("Player's jump force")]
+    public float jumpForce;
+    [Tooltip("Player's amount to multiply for when falling")]
+    public float fallMultiplier;
+    #endregion
+
+    public static float distanceTravelled = 0f;
+    Vector3 lastPosition;
+
+    /// <summary>
+    /// Gesture Actions & values
+    /// </summary>
+    Action leftSwipe;
+    Action rightSwipe;
+    Action upSwipe;
+
+    Action leftRotate;
+    Action rightRotate;
+    float rotateAmount = 5f;
+
+    Action zoomIn;
+    Action zoomOut;
+    float zoomAmount = 1f;
+    float zoomSpeed = 2f;
 
     // Start is called before the first frame update
     void Start()
@@ -46,6 +72,7 @@ public class Player : MonoBehaviour
 
         time = 0;
         minSpeed = currentSpeed;
+        minSideSpeed = currentSideSpeed;
 
         float leftPositionX = -5f;
         float middlePositionX = 0f;
@@ -54,6 +81,18 @@ public class Player : MonoBehaviour
         positions = new float[] { leftPositionX, middlePositionX, rightPositionX };
 
         SetInitialPosition();
+
+        lastPosition = transform.position;
+
+        leftSwipe = () => MoveToExactPosition(ScreenPosition.Left);
+        rightSwipe = () => MoveToExactPosition(ScreenPosition.Right);
+        upSwipe = () => Jump();
+
+        leftRotate = () => Rotate(-rotateAmount);
+        rightRotate = () => Rotate(rotateAmount);
+
+        zoomIn = () => Zoom(zoomAmount);
+        zoomOut = () => Zoom(-zoomAmount);
     }
 
     // Update is called once per frame
@@ -61,8 +100,19 @@ public class Player : MonoBehaviour
     {
         IncreasePlayerSpeed();
         InputManager();
+        CalculateDistanceTravelled();
 
         InputManagerForTesting();
+    }
+
+    void Rotate(float rotateAmt)
+    {
+        Camera.main.transform.Rotate(0f, 0f, rotateAmt);
+    }
+
+    void Zoom(float zoomAmt)
+    {
+        Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView + (zoomAmt * zoomSpeed), 30, 90);
     }
 
     void SetInitialPosition()
@@ -74,41 +124,14 @@ public class Player : MonoBehaviour
 
     void InputManager()
     {
-        if (Input.touchCount > 0)
-        {
-            touch = Input.GetTouch(0);
+        TouchGestures.SwipeGesture(leftSwipe, rightSwipe, upSwipe);
 
-            switch (touch.phase)
-            {
-                case TouchPhase.Began:
-                    beginTouchPosition = touch.position;
-                    break;
-                case TouchPhase.Ended:
-                    endTouchPosition = touch.position;
+        //TouchGestures.RotateGesture(leftRotate, rightRotate);
 
-                    if (beginTouchPosition == endTouchPosition)
-                    {
-                        return;
-                    }
-
-                    if (beginTouchPosition.x - 100f > endTouchPosition.x)
-                    {
-                        MoveToExactPosition(ScreenPosition.Left);
-                    }
-                    else if (beginTouchPosition.x + 100f < endTouchPosition.x)
-                    {
-                        MoveToExactPosition(ScreenPosition.Right);
-                    }
-                    else if (beginTouchPosition.y < endTouchPosition.y)
-                    {
-                        Jump();
-                    }
-
-                    break;
-            }
-        }
+        //TouchGestures.PinchGesture(zoomIn, zoomOut);
 
         GravityBalance();
+
     }
 
     void InputManagerForTesting()
@@ -179,7 +202,7 @@ public class Player : MonoBehaviour
             }
         }
 
-        transform.DOMoveX(positions[(int)currentPosition], sideSpeed * Time.deltaTime);
+        transform.DOMoveX(positions[(int)currentPosition], currentSideSpeed * Time.deltaTime);
         // We should add force instead of using DOTween until the position we need is reached
     }
 
@@ -187,7 +210,19 @@ public class Player : MonoBehaviour
     {
         currentSpeed = Mathf.SmoothStep(minSpeed, maxSpeed, time / accelerationTime);
         transform.position += transform.forward * currentSpeed * Time.deltaTime;
+
+        currentSideSpeed = Mathf.SmoothStep(maxSideSpeed, minSideSpeed, time / accelerationTime);
+
         time += Time.deltaTime;
+    }
+
+    void CalculateDistanceTravelled()
+    {
+        distanceTravelled += Vector3.Distance(transform.position, lastPosition);
+        lastPosition = transform.position;
+
+        var roundedDistance = Mathf.RoundToInt(distanceTravelled);
+        Debug.Log(roundedDistance);
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -215,7 +250,7 @@ public class Player : MonoBehaviour
     }
 }
 
-enum ScreenPosition
+public enum ScreenPosition
 {
     Left,
     Right

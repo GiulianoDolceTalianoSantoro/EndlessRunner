@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    GameObject distanceTravelledText;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -20,5 +22,10 @@ public class GameManager : MonoBehaviour
     public void RestartLevel()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    void UpdateDistanceTravelledByPlayer()
+    {
+        distanceTravelledText.GetComponent<TextMesh>().text = Player.distanceTravelled.ToString();
     }
 }
