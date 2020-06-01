@@ -39,7 +39,7 @@ public class TouchGestures : MonoBehaviour
         
     }
 
-    public static void SwipeGesture(Action leftMovementAction, Action rightMovementAction, Action upMovementAction)
+    public static void SwipeGesture(Action leftMovementAction, Action rightMovementAction, Action upMovementAction, Action downMovementAction)
     {
         if (Input.touchCount > 0)
         {
@@ -69,6 +69,10 @@ public class TouchGestures : MonoBehaviour
                     else if (beginTouchPosition.y < endTouchPosition.y)
                     {
                         upMovementAction();
+                    }
+                    else if (beginTouchPosition.y > endTouchPosition.y)
+                    {
+                        downMovementAction();
                     }
 
                     break;

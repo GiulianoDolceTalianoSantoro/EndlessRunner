@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -52,6 +53,7 @@ public class Player : MonoBehaviour
     Action leftSwipe;
     Action rightSwipe;
     Action upSwipe;
+    Action downSwipe;
 
     Action leftRotate;
     Action rightRotate;
@@ -62,9 +64,13 @@ public class Player : MonoBehaviour
     float zoomAmount = 1f;
     float zoomSpeed = 2f;
 
+    float height;
+
     // Start is called before the first frame update
     void Start()
     {
+        height = transform.localScale.y;
+
         gameManager = FindObjectOfType<GameManager>();
 
         rb = GetComponent<Rigidbody>();
@@ -87,6 +93,7 @@ public class Player : MonoBehaviour
         leftSwipe = () => MoveToExactPosition(ScreenPosition.Left);
         rightSwipe = () => MoveToExactPosition(ScreenPosition.Right);
         upSwipe = () => Jump();
+        downSwipe = () => Crouch();
 
         leftRotate = () => Rotate(-rotateAmount);
         rightRotate = () => Rotate(rotateAmount);
@@ -124,7 +131,7 @@ public class Player : MonoBehaviour
 
     void InputManager()
     {
-        TouchGestures.SwipeGesture(leftSwipe, rightSwipe, upSwipe);
+        TouchGestures.SwipeGesture(leftSwipe, rightSwipe, upSwipe, downSwipe);
 
         //TouchGestures.RotateGesture(leftRotate, rightRotate);
 
@@ -148,6 +155,26 @@ public class Player : MonoBehaviour
         {
             MoveToExactPosition(ScreenPosition.Right);
         }
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            Crouch();
+        }
+    }
+
+    private void Crouch()
+    {
+        Sequence sequence = DOTween.Sequence();
+
+        var initPositionY = transform.position.y;
+
+        sequence.Append(transform.DOMoveY(transform.position.y / 3f, .5f));
+        Wait(1f);
+        sequence.Append(transform.DOMoveY(initPositionY, .5f));
+    }
+
+    private IEnumerator Wait(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
     }
 
     void Jump()
