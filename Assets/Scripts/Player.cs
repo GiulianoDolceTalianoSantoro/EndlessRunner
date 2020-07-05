@@ -6,241 +6,247 @@ using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
-    #region Private Fields
-    GameManager gameManager;
+    public TrackManager trackManager;
+    public Character character;
+    public CharacterCollider characterCollider;
+    public float laneChangeSpeed = 1.0f;
 
-    Rigidbody rb;
+    protected bool _isInvincible;
+    protected bool _isRunning;
 
-    float[] positions;
-    PlayerPosition currentPosition;
+    protected float m_JumpStart;
 
-    float currentSpeed = 20f;
-    float minSpeed;
+    protected bool _isJumping;
 
-    float currentSideSpeed = 1f;
-    float minSideSpeed;
+    public bool IsJumping
+    {
+        get { return _isJumping; }
+    }
 
-    float time;
+    public float jumpLength = 2.0f;     // Distance jumped
+    public float jumpHeight = 1.2f;
 
-    SphereCollider coll;
-    #endregion
+    protected Vector2 _startingTouch;
 
-    #region Public Fields
-    [Header("Speed values")]
-    [Tooltip("Player's maximum speed")]
-    public float maxSpeed = 60f;
-    [Tooltip("Player's maximum side movement speed")]
-    public float maxSideSpeed = 15f;
-    [Tooltip("Player's acceleration per time")]
-    public float accelerationTime = 80f;
-    
+    protected bool _isSwiping;
 
-    [Header("Jump values")]
-    [Tooltip("The layer of GameObjects where the Player will be able to jump over")]
-    public LayerMask floorLayer;
-    [Tooltip("Player's jump force")]
-    public float jumpForce;
-    [Tooltip("Player's amount to multiply for when falling")]
-    public float fallMultiplier;
-    #endregion
+    protected int _currentLane = _startingLane;
+    protected Vector3 _targetPosition = Vector3.zero;
+
+    protected readonly Vector3 _startingPosition = Vector3.forward * 2f;
+
+    protected const int _startingLane = 1;
+    protected const float _groundingSpeed = 80f;
+    protected const float k_TrackSpeedToJumpAnimSpeedRatio = 0.6f;
 
     public static float distanceTravelled = 0f;
     Vector3 lastPosition;
 
-    /// <summary>
-    /// Gesture Actions & values
-    /// </summary>
-    Action leftSwipe;
-    Action rightSwipe;
-    Action upSwipe;
-    Action downSwipe;
-
-    Action leftRotate;
-    Action rightRotate;
-    float rotateAmount = 5f;
-
-    Action zoomIn;
-    Action zoomOut;
-    float zoomAmount = 1f;
-    float zoomSpeed = 2f;
-
-    float height;
-
-    // Start is called before the first frame update
-    void Start()
+    public void CheatInvincible(bool invincible)
     {
-        height = transform.localScale.y;
+        _isInvincible = invincible;
+    }
 
-        gameManager = FindObjectOfType<GameManager>();
+    public bool IsCheatInvincible()
+    {
+        return _isInvincible;
+    }
 
-        rb = GetComponent<Rigidbody>();
-        coll = GetComponent<SphereCollider>();
+    public void Init()
+    {
+        transform.position = _startingPosition;
+        _targetPosition = Vector3.zero;
 
-        time = 0;
-        minSpeed = currentSpeed;
-        minSideSpeed = currentSideSpeed;
+        _currentLane = _startingLane;
+        characterCollider.transform.localPosition = Vector3.zero;
 
-        float leftPositionX = -5f;
-        float middlePositionX = 0f;
-        float rightPositionX = 5f;
+        //currentLife = maxLife;
 
-        positions = new float[] { leftPositionX, middlePositionX, rightPositionX };
+        //m_ObstacleLayer = 1 << LayerMask.NameToLayer("Obstacle");
+    }
 
-        SetInitialPosition();
+    // Called at the beginning of a run or rerun
+    public void Begin()
+    {
+        _isRunning = false;
+        //character.animator.SetBool(s_DeadHash, false);
 
-        lastPosition = transform.position;
+        characterCollider.Init();
+    }
 
-        leftSwipe = () => MoveToExactPosition(ScreenPosition.Left);
-        rightSwipe = () => MoveToExactPosition(ScreenPosition.Right);
-        upSwipe = () => Jump();
-        downSwipe = () => Crouch();
+    public void StartRunning()
+    {
+        StartMoving();
+        //if (character.animator)
+        //{
+        //    character.animator.Play(s_RunStartHash);
+        //    character.animator.SetBool(s_MovingHash, true);
+        //}
+    }
 
-        leftRotate = () => Rotate(-rotateAmount);
-        rightRotate = () => Rotate(rotateAmount);
+    public void StartMoving()
+    {
+        _isRunning = true;
+    }
 
-        zoomIn = () => Zoom(zoomAmount);
-        zoomOut = () => Zoom(-zoomAmount);
+    public void StopMoving()
+    {
+        _isRunning = false;
+        trackManager.StopMove();
+        //if (character.animator)
+        //{
+        //    character.animator.SetBool(s_MovingHash, false);
+        //}
     }
 
     // Update is called once per frame
     void Update()
     {
-        IncreasePlayerSpeed();
         InputManager();
         CalculateDistanceTravelled();
-
-        InputManagerForTesting();
-    }
-
-    void Rotate(float rotateAmt)
-    {
-        Camera.main.transform.Rotate(0f, 0f, rotateAmt);
-    }
-
-    void Zoom(float zoomAmt)
-    {
-        Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView + (zoomAmt * zoomSpeed), 30, 90);
-    }
-
-    void SetInitialPosition()
-    {
-        currentPosition = PlayerPosition.Middle;
-
-        transform.position = new Vector3(positions[(int)currentPosition], transform.position.y, transform.position.z);
     }
 
     void InputManager()
     {
-        TouchGestures.SwipeGesture(leftSwipe, rightSwipe, upSwipe, downSwipe);
+#if UNITY_EDITOR || UNITY_STANDALONE
+        // Use key input in editor or standalone
+        // disabled if it's tutorial and not thecurrent right tutorial level (see func TutorialMoveCheck)
 
-        //TouchGestures.RotateGesture(leftRotate, rightRotate);
-
-        //TouchGestures.PinchGesture(zoomIn, zoomOut);
-
-        GravityBalance();
-
-    }
-
-    void InputManagerForTesting()
-    {
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            Jump();
-        }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            MoveToExactPosition(ScreenPosition.Left);
+            ChangeLane(-1);
         }
         else if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            MoveToExactPosition(ScreenPosition.Right);
+            ChangeLane(1);
         }
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            Crouch();
+            Jump();
         }
-    }
+#else
+        // use touch input on mobile
+        if (Input.touchCount == 1)
+        {
+			if(_isSwiping)
+			{
+                Vector2 diff = Input.GetTouch(0).position - _startingTouch;
 
-    private void Crouch()
-    {
-        Sequence sequence = DOTween.Sequence();
+                // Put difference in Screen ratio, but using only width, so the ratio is the same on both
+                // axes (otherwise we would have to swipe more vertically...)
+                diff = new Vector2(diff.x/Screen.width, diff.y/Screen.width);
 
-        var initPositionY = transform.position.y;
+				if(diff.magnitude > 0.01f) //we set the swip distance to trigger movement to 1% of the screen width
+				{
+					if(Mathf.Abs(diff.y) > Mathf.Abs(diff.x))
+					{
+						if( diff.y > 0)
+						{
+							Jump();
+						}
+					}
+					else
+					{
+						if(diff.x < 0)
+						{
+							ChangeLane(-1);
+						}
+						else
+						{
+							ChangeLane(1);
+						}
+					}
+						
+					_isSwiping = false;
+				}
+            }
 
-        sequence.Append(transform.DOMoveY(transform.position.y / 3f, .5f));
-        Wait(1f);
-        sequence.Append(transform.DOMoveY(initPositionY, .5f));
-    }
+        	// Input check is AFTER the swip test, that way if TouchPhase.Ended happen a single frame after the Began Phase
+			// a swipe can still be registered (otherwise, m_IsSwiping will be set to false and the test wouldn't happen for that began-Ended pair)
+			if(Input.GetTouch(0).phase == TouchPhase.Began)
+			{
+				_startingTouch = Input.GetTouch(0).position;
+				_isSwiping = true;
+			}
+			else if(Input.GetTouch(0).phase == TouchPhase.Ended)
+			{
+				_isSwiping = false;
+			}
+        }
+#endif
 
-    private IEnumerator Wait(float seconds)
-    {
-        yield return new WaitForSeconds(seconds);
+        Vector3 verticalTargetPosition = _targetPosition;
+
+        if (_isJumping)
+        {
+            if (trackManager.isMoving)
+            {
+                // Same as with the sliding, we want a fixed jump LENGTH not fixed jump TIME. Also, just as with sliding,
+                // we slightly modify length with speed to make it more playable.
+                float correctJumpLength = jumpLength * (1.0f + trackManager.speedRatio);
+                float ratio = (trackManager.worldDistance - m_JumpStart) / correctJumpLength;
+                if (ratio >= 1.0f)
+                {
+                    _isJumping = false;
+                    //character.animator.SetBool(s_JumpingHash, false);
+                }
+                else
+                {
+                    verticalTargetPosition.y = Mathf.Sin(ratio * Mathf.PI) * jumpHeight;
+                }
+            }
+            else if (!AudioListener.pause) //use AudioListener.pause as it is an easily accessible singleton & it is set when the app is in pause too
+            {
+                verticalTargetPosition.y = Mathf.MoveTowards(verticalTargetPosition.y, 0, _groundingSpeed * Time.deltaTime);
+                if (Mathf.Approximately(verticalTargetPosition.y, 0f))
+                {
+                    //character.animator.SetBool(s_JumpingHash, false);
+                    _isJumping = false;
+                }
+            }
+        }
+
+        characterCollider.transform.localPosition = Vector3.MoveTowards(characterCollider.transform.localPosition, verticalTargetPosition, laneChangeSpeed * Time.deltaTime);
     }
 
     void Jump()
     {
-        Vector3 vector = new Vector3(coll.bounds.center.x, coll.bounds.min.y, coll.bounds.center.z);
-        var isOnFloor = Physics.CheckCapsule(coll.bounds.center, vector, coll.radius, floorLayer);
-
-        if (isOnFloor)
+        if (!_isRunning)
+		    return;
+	    
+        if (!_isJumping)
         {
-            rb.velocity += Vector3.up * jumpForce;
+			float correctJumpLength = jumpLength * (1.0f + trackManager.speedRatio);
+			m_JumpStart = trackManager.worldDistance;
+            float animSpeed = k_TrackSpeedToJumpAnimSpeedRatio * (trackManager.speed / correctJumpLength);
+
+            //character.animator.SetFloat(s_JumpingSpeedHash, animSpeed);
+            //character.animator.SetBool(s_JumpingHash, true);
+			_isJumping = true;
         }
     }
 
-    void GravityBalance()
+    public void StopJumping()
     {
-        if (rb.velocity.y < 0)
+        if (_isJumping)
         {
-            rb.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+            //character.animator.SetBool(s_JumpingHash, false);
+            _isJumping = false;
         }
     }
 
-    void MoveToExactPosition(ScreenPosition screenPosition)
+    public void ChangeLane(int direction)
     {
-        if (screenPosition == ScreenPosition.Left)
-        {
-            switch (currentPosition)
-            {
-                case PlayerPosition.Left:
-                    currentPosition = PlayerPosition.Left;
-                    break;
-                case PlayerPosition.Middle:
-                    currentPosition = PlayerPosition.Left;
-                    break;
-                case PlayerPosition.Right:
-                    currentPosition = PlayerPosition.Middle;
-                    break;
-            }
-        }
-        else if (screenPosition == ScreenPosition.Right)
-        {
-            switch (currentPosition)
-            {
-                case PlayerPosition.Left:
-                    currentPosition = PlayerPosition.Middle;
-                    break;
-                case PlayerPosition.Middle:
-                    currentPosition = PlayerPosition.Right;
-                    break;
-                case PlayerPosition.Right:
-                    currentPosition = PlayerPosition.Right;
-                    break;
-            }
-        }
+        if (!_isRunning)
+            return;
 
-        transform.DOMoveX(positions[(int)currentPosition], currentSideSpeed * Time.deltaTime);
-        // We should add force instead of using DOTween until the position we need is reached
-    }
+        int targetLane = _currentLane + direction;
 
-    void IncreasePlayerSpeed()
-    {
-        currentSpeed = Mathf.SmoothStep(minSpeed, maxSpeed, time / accelerationTime);
-        transform.position += transform.forward * currentSpeed * Time.deltaTime;
+        if (targetLane < 0 || targetLane > 2)
+            return;
 
-        currentSideSpeed = Mathf.SmoothStep(maxSideSpeed, minSideSpeed, time / accelerationTime);
-
-        time += Time.deltaTime;
+        _currentLane = targetLane;
+        _targetPosition = new Vector3((_currentLane - 1) * trackManager.laneOffset, 0, 0);
     }
 
     void CalculateDistanceTravelled()
@@ -249,38 +255,7 @@ public class Player : MonoBehaviour
         lastPosition = transform.position;
 
         var roundedDistance = Mathf.RoundToInt(distanceTravelled);
-        Debug.Log(roundedDistance);
     }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (!collision.gameObject.CompareTag("Plataform"))
-        {
-            rb.velocity = Vector3.zero;
-            currentSpeed = 0;
-        }
-
-        if (collision.gameObject.CompareTag("Obstacle"))
-        {
-            foreach (ContactPoint contact in collision.contacts)
-            {
-                if (contact.normal.y > 0)
-                {
-                    return;
-                }
-                else
-                {
-                    gameManager.RestartLevel();
-                }
-            }
-        }
-    }
-}
-
-public enum ScreenPosition
-{
-    Left,
-    Right
 }
 
 enum PlayerPosition
