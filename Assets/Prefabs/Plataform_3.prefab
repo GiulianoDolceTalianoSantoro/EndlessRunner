@@ -221,6 +221,7 @@ MonoBehaviour:
   objectRoot: {fileID: 0}
   collectibleTransform: {fileID: 0}
   possibleObstacles:
+  - m_AssetGUID: e1f3381bc224d244db352de206e490f5
   - m_AssetGUID: 662ee428d75867245b4e5bf966693604
   obstaclePositions:
   - 0

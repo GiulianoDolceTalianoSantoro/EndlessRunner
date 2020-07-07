@@ -29,6 +29,7 @@ public class GameState : AState
     //public Text coinText;
     //public Text premiumText;
     //public Text scoreText;
+    public Text livesText;
     public Text distanceText;
     //public Text multiplierText;
     //public Text countdownText;
@@ -36,12 +37,10 @@ public class GameState : AState
     //public RectTransform lifeRectTransform;
 
     //public RectTransform pauseMenu;
-    //public RectTransform wholeUI;
+    public RectTransform wholeUI;
     //public Button pauseButton;
 
-    //public Image inventoryIcon;
-
-    //public GameObject gameOverPopup;
+    public GameObject gameOverPopup;
     //public Button premiumForLifeButton;
     //public GameObject adsForLifeButton;
     //public Text premiumCurrencyOwned;
@@ -91,7 +90,7 @@ public class GameState : AState
         canvas.gameObject.SetActive(true);
         //pauseMenu.gameObject.SetActive(false);
         //wholeUI.gameObject.SetActive(true);
-        //gameOverPopup.SetActive(false);
+        gameOverPopup.SetActive(false);
 
         //sideSlideTuto.SetActive(false);
         //upSlideTuto.SetActive(false);
@@ -122,14 +121,11 @@ public class GameState : AState
 
             m_TimeSinceStart += Time.deltaTime;
 
-            //if (chrCtrl.currentLife <= 0)
-            //{
-            //    pauseButton.gameObject.SetActive(false);
-            //    chrCtrl.CleanConsumable();
-            //    chrCtrl.character.animator.SetBool(s_DeadHash, true);
-            //    chrCtrl.characterCollider.koParticle.gameObject.SetActive(true);
-            //    StartCoroutine(WaitForGameOver());
-            //}
+            if (chrCtrl.currentLife <= 0)
+            {
+                //pauseButton.gameObject.SetActive(false);
+                StartCoroutine(WaitForGameOver());
+            }
 
             UpdateUI();
         }
@@ -202,6 +198,8 @@ public class GameState : AState
         //    }
         //}
 
+        livesText.text = trackManager.player.currentLife.ToString();
+
         //scoreText.text = trackManager.score.ToString();
         //multiplierText.text = "x " + trackManager.multiplier;
 
@@ -233,10 +231,8 @@ public class GameState : AState
         m_Finished = true;
         trackManager.StopMove();
 
-        // Reseting the global blinking value. Can happen if game unexpectly exited while still blinking
-        Shader.SetGlobalFloat("_BlinkingValue", 0.0f);
-
-        yield return new WaitForSeconds(2.0f);
+        yield return new WaitForSeconds(0.5f);
+        GameOver();
     }
 
     protected void ClearPowerup()
@@ -254,13 +250,7 @@ public class GameState : AState
 
     public void OpenGameOverPopup()
     {
-        //premiumForLifeButton.interactable = PlayerData.instance.premium >= 3;
-
-        //premiumCurrencyOwned.text = PlayerData.instance.premium.ToString();
-
-        //ClearPowerup();
-
-        //gameOverPopup.SetActive(true);
+        gameOverPopup.SetActive(true);
     }
 
     public void GameOver()

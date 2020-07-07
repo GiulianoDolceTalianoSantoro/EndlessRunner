@@ -42,6 +42,11 @@ public class Player : MonoBehaviour
     public static float distanceTravelled = 0f;
     Vector3 lastPosition;
 
+    protected int m_CurrentLife;
+    public int maxLife = 3;
+    public int currentLife { get { return m_CurrentLife; } set { m_CurrentLife = value; } }
+
+
     public void CheatInvincible(bool invincible)
     {
         _isInvincible = invincible;
@@ -60,16 +65,13 @@ public class Player : MonoBehaviour
         _currentLane = _startingLane;
         characterCollider.transform.localPosition = Vector3.zero;
 
-        //currentLife = maxLife;
-
-        //m_ObstacleLayer = 1 << LayerMask.NameToLayer("Obstacle");
+        currentLife = maxLife;
     }
 
     // Called at the beginning of a run or rerun
     public void Begin()
     {
         _isRunning = false;
-        //character.animator.SetBool(s_DeadHash, false);
 
         characterCollider.Init();
     }
@@ -77,11 +79,6 @@ public class Player : MonoBehaviour
     public void StartRunning()
     {
         StartMoving();
-        //if (character.animator)
-        //{
-        //    character.animator.Play(s_RunStartHash);
-        //    character.animator.SetBool(s_MovingHash, true);
-        //}
     }
 
     public void StartMoving()
@@ -93,17 +90,12 @@ public class Player : MonoBehaviour
     {
         _isRunning = false;
         trackManager.StopMove();
-        //if (character.animator)
-        //{
-        //    character.animator.SetBool(s_MovingHash, false);
-        //}
     }
 
     // Update is called once per frame
     void Update()
     {
         InputManager();
-        CalculateDistanceTravelled();
     }
 
     void InputManager()
@@ -188,7 +180,6 @@ public class Player : MonoBehaviour
                 if (ratio >= 1.0f)
                 {
                     _isJumping = false;
-                    //character.animator.SetBool(s_JumpingHash, false);
                 }
                 else
                 {
@@ -200,7 +191,6 @@ public class Player : MonoBehaviour
                 verticalTargetPosition.y = Mathf.MoveTowards(verticalTargetPosition.y, 0, _groundingSpeed * Time.deltaTime);
                 if (Mathf.Approximately(verticalTargetPosition.y, 0f))
                 {
-                    //character.animator.SetBool(s_JumpingHash, false);
                     _isJumping = false;
                 }
             }
@@ -218,10 +208,7 @@ public class Player : MonoBehaviour
         {
 			float correctJumpLength = jumpLength * (1.0f + trackManager.speedRatio);
 			m_JumpStart = trackManager.worldDistance;
-            float animSpeed = k_TrackSpeedToJumpAnimSpeedRatio * (trackManager.speed / correctJumpLength);
 
-            //character.animator.SetFloat(s_JumpingSpeedHash, animSpeed);
-            //character.animator.SetBool(s_JumpingHash, true);
 			_isJumping = true;
         }
     }
@@ -230,7 +217,6 @@ public class Player : MonoBehaviour
     {
         if (_isJumping)
         {
-            //character.animator.SetBool(s_JumpingHash, false);
             _isJumping = false;
         }
     }
@@ -256,11 +242,4 @@ public class Player : MonoBehaviour
 
         var roundedDistance = Mathf.RoundToInt(distanceTravelled);
     }
-}
-
-enum PlayerPosition
-{
-    Left,
-    Middle,
-    Right
 }

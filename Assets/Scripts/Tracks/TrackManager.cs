@@ -25,15 +25,12 @@ public class TrackManager : MonoBehaviour
 
     public bool invincible = false;
 
-    //[Header("Parallax")]
-    //public Transform parallaxRoot;
-    //public float parallaxRatio = 0.5f;
-
     public System.Action<TrackSegment> newSegmentCreated;
     public System.Action<TrackSegment> currentSegementChanged;
 
-    public float timeToStart { get { return m_TimeToStart; } }  // Will return -1 if already started (allow to update UI)
+    public float timeToStart { get { return m_TimeToStart; } } 
 
+    public int score { get { return m_Score; } }
     public float worldDistance { get { return m_TotalWorldDistance; } }
     public float speed { get { return m_Speed; } }
     public float speedRatio { get { return (m_Speed - minSpeed) / (maxSpeed - minSpeed); } }
@@ -43,10 +40,7 @@ public class TrackManager : MonoBehaviour
 
     public bool isMoving { get { return m_IsMoving; } }
     public bool isRerun { get { return m_Rerun; } set { m_Rerun = value; } }
-
-    //public bool isTutorial { get { return m_IsTutorial; } set { m_IsTutorial = value; } }
-    public bool isLoaded { get; set; }
-    //used by the obstacle spawning code in the tutorial, as it need to spawn the 1st obstacle in the middle lane
+    public bool isLoaded { get; set; } 
     public bool firstObstacle { get; set; }
 
     protected float m_TimeToStart = -1.0f;
@@ -398,8 +392,6 @@ public class TrackManager : MonoBehaviour
             m_Speed += k_Acceleration * Time.deltaTime;
         else
             m_Speed = maxSpeed;
-
-        Debug.Log(m_Speed);
 
         m_Multiplier = 1 + Mathf.FloorToInt((m_Speed - minSpeed) / (maxSpeed - minSpeed) * speedStep);
 

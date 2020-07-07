@@ -1,7 +1,7 @@
-﻿using System;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 public class CharacterCollider : MonoBehaviour
 {
@@ -67,35 +67,30 @@ public class CharacterCollider : MonoBehaviour
 		//		m_Audio.PlayOneShot(coinSound);
 		//	}
 		//}
-		//else if (c.gameObject.layer == k_ObstacleLayerIndex)
-		//{
-		//	if (m_Invincible || controller.IsCheatInvincible())
-		//		return;
+		//else 
+		if (c.gameObject.CompareTag("Obstacle"))
+		{
+			controller.currentLife -= 1;
+			Debug.Log(controller.currentLife);
 
-		//	controller.StopMoving();
+			if (controller.currentLife > 0 || controller.IsCheatInvincible())
+				return;
 
-		//	c.enabled = false;
+			controller.StopMoving();
 
-		//	Obstacle ob = c.gameObject.GetComponent<Obstacle>();
+			c.enabled = false;
 
-		//	if (ob != null)
-		//	{
-		//		ob.Impacted();
-		//	}
-		//	else
-		//	{
-		//		Addressables.ReleaseInstance(c.gameObject);
-		//	}
+			Obstacle ob = c.gameObject.GetComponent<Obstacle>();
 
-		//	if (TrackManager.instance.isTutorial)
-		//	{
-		//		m_TutorialHitObstacle = true;
-		//	}
-		//	else
-		//	{
-		//		controller.currentLife -= 1;
-		//	}
-
+			if (ob != null)
+			{
+				ob.Impacted();
+			}
+			else
+			{
+				Addressables.ReleaseInstance(c.gameObject);
+			}
+		}
 		//	controller.character.animator.SetTrigger(s_HitHash);
 
 		//	if (controller.currentLife > 0)

@@ -6,20 +6,12 @@ public class LoadoutState : AState
 {
     public Canvas inventoryCanvas;
 
-    [Header("Game Title UI")]
-    public Text titleNameDisplay;
-
-    [Header("Other Data")]
-    public Button startButton;
-
     protected GameObject m_Character;
     protected const float k_CharacterRotationSpeed = 45f;
 
     public override void Enter(AState from)
     {
         inventoryCanvas.gameObject.SetActive(true);
-
-        titleNameDisplay.text = "";
     }
 
     public override void Exit(AState to)
