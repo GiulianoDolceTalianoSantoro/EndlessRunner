@@ -17,16 +17,36 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 91e10487ad2bfd245aacc4f1d4e5f45e
   m_SerializeEntries:
-  - m_GUID: 30803e00b81cdc743aa7fc774f2f4181
-    m_Address: Assets/Prefabs/Plataform 1.prefab
+  - m_GUID: 662ee428d75867245b4e5bf966693604
+    m_Address: Obstacle_1
     m_ReadOnly: 0
     m_SerializedLabels: []
   - m_GUID: 86c6e8d9412f69e46a021a20bb3a5fe9
     m_Address: themeData
     m_ReadOnly: 0
     m_SerializedLabels: []
-  - m_GUID: e90cfce7067d2a6418a2c533267df28f
-    m_Address: Assets/Prefabs/Plataform1.prefab
+  - m_GUID: ac5b1a1deea38b849b577be985c539bd
+    m_Address: Plataform_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: b3fedcc666f03f3499dbaea1a30c6faa
+    m_Address: Plataform_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c96189a863f362942ad4d16af021af09
+    m_Address: Player
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d6e8bb6a9d58459429edfcac722d3884
+    m_Address: Assets/Sounds/MainMix.mixer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e08eab48499712041aef7380cee5722f
+    m_Address: Plataform_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e1f3381bc224d244db352de206e490f5
+    m_Address: Obstacle
     m_ReadOnly: 0
     m_SerializedLabels: []
   m_ReadOnly: 0
