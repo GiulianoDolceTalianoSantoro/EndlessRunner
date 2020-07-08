@@ -10,20 +10,6 @@ public abstract class Obstacle : MonoBehaviour
 
 	public virtual void Impacted()
 	{
-		//Animation anim = GetComponentInChildren<Animation>();
-		//AudioSource audioSource = GetComponent<AudioSource>();
-
-		//if (anim != null)
-		//{
-		//	anim.Play();
-		//}
-
-		//if (audioSource != null && impactedSound != null)
-		//{
-		//	audioSource.Stop();
-		//	audioSource.loop = false;
-		//	audioSource.clip = impactedSound;
-		//	audioSource.Play();
-		//}
+		// Play sounds or instantiate effects
 	}
 }

@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-
 
 public class GameOverState : AState
 {
@@ -14,6 +11,7 @@ public class GameOverState : AState
     {
         canvas.gameObject.SetActive(true);
 
+        //TestDebug.Debugging(from.GetName());
         score.text = trackManager.score.ToString();
     }
 

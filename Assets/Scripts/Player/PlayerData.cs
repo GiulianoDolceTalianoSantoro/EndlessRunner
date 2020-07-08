@@ -17,14 +17,8 @@ public class PlayerData
     protected string saveFile = "";
 
 
-    public List<string> characters = new List<string>();    // Inventory of characters owned.
-    public int usedCharacter;                               // Currently equipped character.
-    public int usedAccessory = -1;
-    public List<string> characterAccessories = new List<string>();  // List of owned accessories, in the form "charName:accessoryName".
-    public List<string> themes = new List<string>();                // Owned themes.
-    public int usedTheme;                                           // Currently used theme.
-
-    public string previousName = "Trash Cat";
+    public List<string> characters = new List<string>();
+    public int usedCharacter;
 
     public void AddCharacter(string name)
     {
@@ -36,10 +30,12 @@ public class PlayerData
         if (m_Instance == null)
         {
             m_Instance = new PlayerData();
+
+            CoroutineHandler.StartStaticCoroutine(CharacterDatabase.LoadDatabase());
         }
 
         m_Instance.saveFile = Application.persistentDataPath + "/save.bin";
 
-        m_Instance.characters.Add("Player");
+        m_Instance.characters.Add("Cube");
     }
 }

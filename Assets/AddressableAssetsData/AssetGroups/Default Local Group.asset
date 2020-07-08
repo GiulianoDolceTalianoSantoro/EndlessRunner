@@ -17,6 +17,10 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 91e10487ad2bfd245aacc4f1d4e5f45e
   m_SerializeEntries:
+  - m_GUID: 1109512fce7ce1a4f81087ceed96410a
+    m_Address: Assets/Scenes/PrototypeScene.unity
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   - m_GUID: 662ee428d75867245b4e5bf966693604
     m_Address: Obstacle_1
     m_ReadOnly: 0
@@ -33,8 +37,8 @@ MonoBehaviour:
     m_Address: Plataform_2
     m_ReadOnly: 0
     m_SerializedLabels: []
-  - m_GUID: c96189a863f362942ad4d16af021af09
-    m_Address: Player
+  - m_GUID: b66f99eba06bab44aa6466c55cf2afce
+    m_Address: Collectable
     m_ReadOnly: 0
     m_SerializedLabels: []
   - m_GUID: d6e8bb6a9d58459429edfcac722d3884

@@ -7,6 +7,7 @@ TagManager:
   - Cube
   - Plataform
   - Obstacle
+  - Coin
   layers:
   - Default
   - TransparentFX

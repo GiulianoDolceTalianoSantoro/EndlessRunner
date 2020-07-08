@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections;
-using DG.Tweening;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 
 public class Player : MonoBehaviour
 {
@@ -23,7 +19,7 @@ public class Player : MonoBehaviour
         get { return _isJumping; }
     }
 
-    public float jumpLength = 2.0f;     // Distance jumped
+    public float jumpLength = 2.0f;
     public float jumpHeight = 1.2f;
 
     protected Vector2 _startingTouch;
@@ -39,13 +35,12 @@ public class Player : MonoBehaviour
     protected const float _groundingSpeed = 80f;
     protected const float k_TrackSpeedToJumpAnimSpeedRatio = 0.6f;
 
-    public static float distanceTravelled = 0f;
-    Vector3 lastPosition;
-
     protected int m_CurrentLife;
     public int maxLife = 3;
     public int currentLife { get { return m_CurrentLife; } set { m_CurrentLife = value; } }
 
+    protected int m_Points;
+    public int points { get { return m_Points; } set { m_Points = value; } }
 
     public void CheatInvincible(bool invincible)
     {
@@ -59,6 +54,8 @@ public class Player : MonoBehaviour
 
     public void Init()
     {
+        //TestDebug.Debugging("player init");
+
         transform.position = _startingPosition;
         _targetPosition = Vector3.zero;
 
@@ -66,12 +63,15 @@ public class Player : MonoBehaviour
         characterCollider.transform.localPosition = Vector3.zero;
 
         currentLife = maxLife;
+        points = 0;
     }
 
     // Called at the beginning of a run or rerun
     public void Begin()
     {
         _isRunning = false;
+
+        //TestDebug.Debugging("player begin");
 
         characterCollider.Init();
     }
@@ -83,6 +83,8 @@ public class Player : MonoBehaviour
 
     public void StartMoving()
     {
+        //TestDebug.Debugging("start");
+
         _isRunning = true;
     }
 
@@ -100,9 +102,7 @@ public class Player : MonoBehaviour
 
     void InputManager()
     {
-#if UNITY_EDITOR || UNITY_STANDALONE
         // Use key input in editor or standalone
-        // disabled if it's tutorial and not thecurrent right tutorial level (see func TutorialMoveCheck)
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
@@ -116,7 +116,11 @@ public class Player : MonoBehaviour
         {
             Jump();
         }
-#else
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            StopJumping();
+        }
+
         // use touch input on mobile
         if (Input.touchCount == 1)
         {
@@ -124,15 +128,17 @@ public class Player : MonoBehaviour
 			{
                 Vector2 diff = Input.GetTouch(0).position - _startingTouch;
 
-                // Put difference in Screen ratio, but using only width, so the ratio is the same on both
-                // axes (otherwise we would have to swipe more vertically...)
                 diff = new Vector2(diff.x/Screen.width, diff.y/Screen.width);
 
 				if(diff.magnitude > 0.01f) //we set the swip distance to trigger movement to 1% of the screen width
 				{
 					if(Mathf.Abs(diff.y) > Mathf.Abs(diff.x))
 					{
-						if( diff.y > 0)
+                        if(diff.y < 0)
+                        {
+                            StopJumping();
+                        }
+						else
 						{
 							Jump();
 						}
@@ -153,8 +159,6 @@ public class Player : MonoBehaviour
 				}
             }
 
-        	// Input check is AFTER the swip test, that way if TouchPhase.Ended happen a single frame after the Began Phase
-			// a swipe can still be registered (otherwise, m_IsSwiping will be set to false and the test wouldn't happen for that began-Ended pair)
 			if(Input.GetTouch(0).phase == TouchPhase.Began)
 			{
 				_startingTouch = Input.GetTouch(0).position;
@@ -165,7 +169,6 @@ public class Player : MonoBehaviour
 				_isSwiping = false;
 			}
         }
-#endif
 
         Vector3 verticalTargetPosition = _targetPosition;
 
@@ -173,8 +176,6 @@ public class Player : MonoBehaviour
         {
             if (trackManager.isMoving)
             {
-                // Same as with the sliding, we want a fixed jump LENGTH not fixed jump TIME. Also, just as with sliding,
-                // we slightly modify length with speed to make it more playable.
                 float correctJumpLength = jumpLength * (1.0f + trackManager.speedRatio);
                 float ratio = (trackManager.worldDistance - m_JumpStart) / correctJumpLength;
                 if (ratio >= 1.0f)
@@ -186,7 +187,7 @@ public class Player : MonoBehaviour
                     verticalTargetPosition.y = Mathf.Sin(ratio * Mathf.PI) * jumpHeight;
                 }
             }
-            else if (!AudioListener.pause) //use AudioListener.pause as it is an easily accessible singleton & it is set when the app is in pause too
+            else if (!AudioListener.pause)
             {
                 verticalTargetPosition.y = Mathf.MoveTowards(verticalTargetPosition.y, 0, _groundingSpeed * Time.deltaTime);
                 if (Mathf.Approximately(verticalTargetPosition.y, 0f))
@@ -206,7 +207,6 @@ public class Player : MonoBehaviour
 	    
         if (!_isJumping)
         {
-			float correctJumpLength = jumpLength * (1.0f + trackManager.speedRatio);
 			m_JumpStart = trackManager.worldDistance;
 
 			_isJumping = true;
@@ -233,13 +233,5 @@ public class Player : MonoBehaviour
 
         _currentLane = targetLane;
         _targetPosition = new Vector3((_currentLane - 1) * trackManager.laneOffset, 0, 0);
-    }
-
-    void CalculateDistanceTravelled()
-    {
-        distanceTravelled += Vector3.Distance(transform.position, lastPosition);
-        lastPosition = transform.position;
-
-        var roundedDistance = Mathf.RoundToInt(distanceTravelled);
     }
 }

@@ -14,7 +14,6 @@ public class TrackSegment : MonoBehaviour
 
     public AssetReference[] possibleObstacles;
 
-    [HideInInspector]
     public float[] obstaclePositions;
 
     public float worldLength { get { return m_WorldLength; } }
@@ -34,14 +33,12 @@ public class TrackSegment : MonoBehaviour
         collectibleTransform = obj.transform;
     }
 
-    // Same as GetPointAt but using an interpolation parameter in world units instead of 0 to 1.
     public void GetPointAtInWorldUnit(float wt, out Vector3 pos, out Quaternion rot)
     {
         float t = wt / m_WorldLength;
         GetPointAt(t, out pos, out rot);
     }
 
-    // Interpolation parameter t is clamped between 0 and 1.
     public void GetPointAt(float t, out Vector3 pos, out Quaternion rot)
     {
         float clampedT = Mathf.Clamp01(t);
@@ -83,7 +80,6 @@ public class TrackSegment : MonoBehaviour
         {
             Transform t = collectibleTransform.GetChild(0);
             t.SetParent(null);
-            //Coin.coinPool.Free(t.gameObject);
         }
 
         Addressables.ReleaseInstance(gameObject);
@@ -133,11 +129,6 @@ class TrackSegmentEditor : Editor
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
-
-        if (GUILayout.Button("Add obstacles"))
-        {
-            ArrayUtility.Add(ref m_Segment.obstaclePositions, 0.0f);
-        }
 
         if (m_Segment.obstaclePositions != null)
         {
